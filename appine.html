@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Affine Cipher Tool - Matdis Project</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f9; display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; width: 100%; }
+        h2 { color: #333; text-align: center; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 48%; padding: 10px; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; }
+        .btn-enc { background: #4CAF50; color: white; }
+        .btn-dec { background: #2196F3; color: white; }
+        .result { margin-top: 20px; padding: 10px; background: #e7f3ff; border-left: 5px solid #2196F3; word-wrap: break-word; }
+        .warning { color: red; font-size: 0.8rem; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Affine Cipher Web</h2>
+    
+    <div class="input-group">
+        <label>Teks (Input):</label>
+        <textarea id="inputText" rows="3" placeholder="Masukkan teks..."></textarea>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+        <div class="input-group">
+            <label>Kunci a (Harus Prima dgn 26):</label>
+            <input type="number" id="keyA" value="5">
+            <div id="warnA" class="warning"></div>
+        </div>
+        <div class="input-group">
+            <label>Kunci b (Shift):</label>
+            <input type="number" id="keyB" value="8">
+        </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between;">
+        <button class="btn-enc" onclick="process(true)">Enkripsi</button>
+        <button class="btn-dec" onclick="process(false)">Dekripsi</button>
+    </div>
+
+    <div class="result" id="outputBox">
+        <strong>Hasil:</strong> <span id="outputText">-</span>
+    </div>
+</div>
+
+<script>
+    // Fungsi mencari FPB (GCD) untuk validasi kunci A
+    function gcd(a, b) {
+        return b == 0 ? a : gcd(b, a % b);
+    }
+
+    // Mencari Modular Multiplicative Inverse (a^-1 mod m)
+    function modInverse(a, m) {
+        for (let x = 1; x < m; x++) {
+            if (((a % m) * (x % m)) % m == 1) return x;
+        }
+        return 1;
+    }
+
+    function process(isEncrypt) {
+        const text = document.getElementById('inputText').value.toUpperCase();
+        const a = parseInt(document.getElementById('keyA').value);
+        const b = parseInt(document.getElementById('keyB').value);
+        const warnA = document.getElementById('warnA');
+        
+        // Validasi Kunci A
+        if (gcd(a, 26) !== 1) {
+            warnA.innerText = "Kunci 'a' tidak valid! Harus relatif prima dengan 26.";
+            return;
+        } else {
+            warnA.innerText = "";
+        }
+
+        let result = "";
+        const a_inv = modInverse(a, 26);
+
+        for (let i = 0; i < text.length; i++) {
+            let charCode = text.charCodeAt(i);
+            if (charCode >= 65 && charCode <= 90) { // Hanya proses A-Z
+                let x = charCode - 65;
+                if (isEncrypt) {
+                    // E(x) = (ax + b) mod 26
+                    let res = (a * x + b) % 26;
+                    result += String.fromCharCode(res + 65);
+                } else {
+                    // D(x) = a^-1 * (x - b) mod 26
+                    let res = (a_inv * (x - b)) % 26;
+                    if (res < 0) res += 26; // Menangani hasil negatif di JS
+                    result += String.fromCharCode(res + 65);
+                }
+            } else {
+                result += text[i]; // Spasi atau simbol tetap
+            }
+        }
+        document.getElementById('outputText').innerText = result;
+    }
+</script>
+
+</body>
+</html>
